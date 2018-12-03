@@ -1,0 +1,18 @@
+syntax: glob
+
+# IDE
+*.sublime-*
+
+
+# Caches
+.tox
+.pytest_cache
+.mypy_cache
+.coverage
+*.egg-info
+build
+dist
+
+
+# Compiled files
+*.pyc
