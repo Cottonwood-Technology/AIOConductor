@@ -1,12 +1,12 @@
 import asyncio
 
-import pytest
+import pytest  # type: ignore
 
 from aioconductor import Conductor, Component
 
 
 @pytest.mark.asyncio
-async def test_setup_and_shutdown(event_loop):
+async def test_setup_and_shutdown(event_loop: asyncio.AbstractEventLoop) -> None:
     setup_log = []
     shutdown_log = []
 
@@ -86,7 +86,7 @@ async def test_setup_and_shutdown(event_loop):
 
 
 @pytest.mark.asyncio
-async def test_patch(event_loop):
+async def test_patch(event_loop: asyncio.AbstractEventLoop) -> None:
     class A(Component):
         pass
 
@@ -109,7 +109,7 @@ async def test_patch(event_loop):
     assert b.a is a
 
 
-def test_run(event_loop):
+def test_run(event_loop: asyncio.AbstractEventLoop) -> None:
     setup_log = []
     shutdown_log = []
     run_log = []
@@ -134,7 +134,7 @@ def test_run(event_loop):
     assert not a.active.is_set()
 
 
-def test_serve(event_loop):
+def test_serve(event_loop: asyncio.AbstractEventLoop) -> None:
     setup_log = []
     shutdown_log = []
     run_log = []

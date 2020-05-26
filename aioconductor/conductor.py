@@ -2,9 +2,12 @@ import asyncio
 import logging
 import signal
 
-from typing import Type, Any, Awaitable, List, Set, Dict
+from typing import cast, Type, TypeVar, Any, Awaitable, List, Set, Dict
 
 from .component import Component
+
+
+T = TypeVar("T", bound=Component)
 
 
 class Conductor:
@@ -32,16 +35,16 @@ class Conductor:
     ) -> None:
         self.patches[component_class] = patch_class
 
-    def add(self, component_class: Type[Component]) -> Component:
+    def add(self, component_class: Type[T]) -> T:
         try:
-            return self.components[component_class]
+            return cast(T, self.components[component_class])
         except KeyError:
             pass
         actual_class = self.patches.get(component_class, component_class)
         self.components[component_class] = component = actual_class(
             self.config, self.logger, self.loop
         )
-        return component
+        return cast(T, component)
 
     async def setup(self) -> None:
         scheduled: Set[Component] = set()

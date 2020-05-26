@@ -1,12 +1,12 @@
 import asyncio
 import logging
 
-import pytest
+import pytest  # type: ignore
 
 from aioconductor import Component
 
 
-def test_depends_on():
+def test_depends_on() -> None:
     class A(Component):
         pass
 
@@ -32,16 +32,16 @@ def test_depends_on():
     assert Y.__depends_on__ == {"component_1": A, "component_2": C}
 
 
-def test_repr():
+def test_repr(event_loop: asyncio.AbstractEventLoop) -> None:
     class A(Component):
         pass
 
-    a = A(config={}, logger=None, loop=None)
+    a = A(config={}, logger=logging.getLogger(__name__), loop=event_loop)
     assert repr(a) == "<tests.test_component.A()>"
 
 
 @pytest.mark.asyncio
-async def test_setup_and_shutdown(event_loop):
+async def test_setup_and_shutdown(event_loop: asyncio.AbstractEventLoop) -> None:
     setup_log = []
     shutdown_log = []
 
