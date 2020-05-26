@@ -11,8 +11,8 @@ class Component:
     logger: logging.Logger
     loop: asyncio.AbstractEventLoop
 
-    active: asyncio.Event
-    released: asyncio.Event
+    _active: asyncio.Event
+    _released: asyncio.Event
 
     required_by: Set["Component"]
     depends_on: Set["Component"]
@@ -41,9 +41,9 @@ class Component:
         self.logger = logger
         self.loop = loop
 
-        self.active = asyncio.Event(loop=loop)
-        self.released = asyncio.Event(loop=loop)
-        self.released.set()
+        self._active = asyncio.Event(loop=loop)
+        self._released = asyncio.Event(loop=loop)
+        self._released.set()
 
         self.required_by = set()
         self.depends_on = set()
@@ -51,34 +51,34 @@ class Component:
     def __repr__(self):
         return f"<{self.__class__.__module__}.{self.__class__.__name__}()>"
 
-    async def acquire(self, component: "Component") -> None:
-        await self.active.wait()
+    async def _acquire(self, component: "Component") -> None:
+        await self._active.wait()
         self.required_by.add(component)
-        self.released.clear()
+        self._released.clear()
 
-    async def release(self, component: "Component") -> None:
+    async def _release(self, component: "Component") -> None:
         self.required_by.remove(component)
         if not self.required_by:
-            self.released.set()
+            self._released.set()
 
-    async def setup(self, **depends_on: "Component") -> None:
+    async def _setup(self, **depends_on: "Component") -> None:
         if depends_on:
             self.logger.info("%r: Acquiring dependencies...", self)
             aws = []
             for name, component in depends_on.items():
                 setattr(self, name, component)
                 self.depends_on.add(component)
-                aws.append(component.acquire(self))
+                aws.append(component._acquire(self))
             await asyncio.gather(*aws, loop=self.loop)
         self.logger.info("%r: Setting up...", self)
         await self.on_setup()
-        self.active.set()
+        self._active.set()
         self.logger.info("%r: Active", self)
 
-    async def shutdown(self) -> None:
+    async def _shutdown(self) -> None:
         if self.required_by:
             self.logger.info("%r: Waiting for release...", self)
-            await self.released.wait()
+            await self._released.wait()
         self.logger.info("%r: Shutting down...", self)
         try:
             await self.on_shutdown()
@@ -86,11 +86,11 @@ class Component:
             self.logger.exception("%r: Unexpected error during shutdown", self)
         if self.depends_on:
             await asyncio.gather(
-                *(component.release(self) for component in self.depends_on),
+                *(component._release(self) for component in self.depends_on),
                 loop=self.loop,
             )
             self.depends_on.clear()
-        self.active.clear()
+        self._active.clear()
         self.logger.info("%r: Inactive", self)
 
     async def on_setup(self) -> None:

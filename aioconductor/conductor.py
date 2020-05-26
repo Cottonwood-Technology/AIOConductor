@@ -50,11 +50,11 @@ class Conductor:
         scheduled: Set[Component] = set()
         aws: List[Awaitable] = []
 
-        def schedule_setup(component):
+        def schedule_setup(component: T) -> T:
             if component in scheduled:
                 return component
             aws.append(
-                component.setup(
+                component._setup(
                     **{
                         name: schedule_setup(self.add(dependency_class))
                         for name, dependency_class in component.__depends_on__.items()
@@ -73,7 +73,7 @@ class Conductor:
     async def shutdown(self) -> None:
         self.logger.info("Shutting down components...")
         await asyncio.gather(
-            *(component.shutdown() for component in self.components.values()),
+            *(component._shutdown() for component in self.components.values()),
             loop=self.loop
         )
         self.logger.info("All components are inactive")

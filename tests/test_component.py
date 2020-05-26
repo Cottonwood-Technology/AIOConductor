@@ -87,72 +87,72 @@ async def test_setup_and_shutdown(event_loop: asyncio.AbstractEventLoop) -> None
     c = C(config={}, logger=logger, loop=event_loop)
     d = D(config={}, logger=logger, loop=event_loop)
 
-    assert not a.active.is_set()
-    assert a.released.is_set()
+    assert not a._active.is_set()
+    assert a._released.is_set()
     assert a.depends_on == set()
     assert a.required_by == set()
 
-    assert not b.active.is_set()
-    assert b.released.is_set()
+    assert not b._active.is_set()
+    assert b._released.is_set()
     assert b.depends_on == set()
     assert b.required_by == set()
 
-    assert not c.active.is_set()
-    assert c.released.is_set()
+    assert not c._active.is_set()
+    assert c._released.is_set()
     assert c.depends_on == set()
     assert c.required_by == set()
 
-    assert not d.active.is_set()
-    assert d.released.is_set()
+    assert not d._active.is_set()
+    assert d._released.is_set()
     assert d.depends_on == set()
     assert d.required_by == set()
 
-    await asyncio.gather(a.setup(), b.setup(a=a), c.setup(a=a), d.setup(b=b, c=c))
+    await asyncio.gather(a._setup(), b._setup(a=a), c._setup(a=a), d._setup(b=b, c=c))
     assert setup_log in (["a", "b", "c", "d"], ["a", "c", "b", "d"])
 
-    assert a.active.is_set()
-    assert not a.released.is_set()
+    assert a._active.is_set()
+    assert not a._released.is_set()
     assert a.depends_on == set()
     assert a.required_by == {b, c}
 
-    assert b.active.is_set()
-    assert not b.released.is_set()
+    assert b._active.is_set()
+    assert not b._released.is_set()
     assert b.depends_on == {a}
     assert b.required_by == {d}
     assert b.a is a
 
-    assert c.active.is_set()
-    assert not c.released.is_set()
+    assert c._active.is_set()
+    assert not c._released.is_set()
     assert c.depends_on == {a}
     assert c.required_by == {d}
     assert c.a is a
 
-    assert d.active.is_set()
-    assert d.released.is_set()
+    assert d._active.is_set()
+    assert d._released.is_set()
     assert d.depends_on == {b, c}
     assert d.required_by == set()
     assert d.b is b
     assert d.c is c
 
-    await asyncio.gather(a.shutdown(), b.shutdown(), c.shutdown(), d.shutdown())
+    await asyncio.gather(a._shutdown(), b._shutdown(), c._shutdown(), d._shutdown())
     assert shutdown_log in (["d", "b", "c", "a"], ["d", "c", "b", "a"])
 
-    assert not a.active.is_set()
-    assert a.released.is_set()
+    assert not a._active.is_set()
+    assert a._released.is_set()
     assert a.depends_on == set()
     assert a.required_by == set()
 
-    assert not b.active.is_set()
-    assert b.released.is_set()
+    assert not b._active.is_set()
+    assert b._released.is_set()
     assert b.depends_on == set()
     assert b.required_by == set()
 
-    assert not c.active.is_set()
-    assert c.released.is_set()
+    assert not c._active.is_set()
+    assert c._released.is_set()
     assert c.depends_on == set()
     assert c.required_by == set()
 
-    assert not d.active.is_set()
-    assert d.released.is_set()
+    assert not d._active.is_set()
+    assert d._released.is_set()
     assert d.depends_on == set()
     assert d.required_by == set()

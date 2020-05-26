@@ -58,31 +58,31 @@ async def test_setup_and_shutdown(event_loop: asyncio.AbstractEventLoop) -> None
 
     assert a.loop is conductor.loop
     assert a.config is conductor.config
-    assert a.active.is_set()
+    assert a._active.is_set()
 
     assert b.loop is conductor.loop
     assert b.config is conductor.config
-    assert b.active.is_set()
+    assert b._active.is_set()
     assert b.a is a
 
     assert c.loop is conductor.loop
     assert c.config is conductor.config
-    assert c.active.is_set()
+    assert c._active.is_set()
     assert c.a is a
 
     assert d.loop is conductor.loop
     assert d.config is conductor.config
-    assert d.active.is_set()
+    assert d._active.is_set()
     assert d.b is b
     assert d.c is c
 
     await conductor.shutdown()
     assert shutdown_log in (["d", "b", "c", "a"], ["d", "c", "b", "a"])
 
-    assert not a.active.is_set()
-    assert not b.active.is_set()
-    assert not c.active.is_set()
-    assert not d.active.is_set()
+    assert not a._active.is_set()
+    assert not b._active.is_set()
+    assert not c._active.is_set()
+    assert not d._active.is_set()
 
 
 @pytest.mark.asyncio
@@ -131,7 +131,7 @@ def test_run(event_loop: asyncio.AbstractEventLoop) -> None:
     assert setup_log == ["a"]
     assert run_log == ["a"]
     assert shutdown_log == ["a"]
-    assert not a.active.is_set()
+    assert not a._active.is_set()
 
 
 def test_serve(event_loop: asyncio.AbstractEventLoop) -> None:
@@ -183,5 +183,5 @@ def test_serve(event_loop: asyncio.AbstractEventLoop) -> None:
     assert setup_log == ["a", "b"]
     assert run_log == ["a", "a", "a"]
     assert shutdown_log == ["b", "a"]
-    assert not b.active.is_set()
+    assert not b._active.is_set()
     assert b.run_task.done()
