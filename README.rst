@@ -26,18 +26,18 @@ This is how it can be solved using AIOConductor.
 
     class Database(Component):
 
-        async def setup(self):
+        async def on_setup(self):
             """ Setup database """
 
-        async def shutdown(self):
+        async def on_shutdown(self):
             """ Shutdown database """
 
     class MessageQueue(Component):
 
-        async def setup(self):
+        async def on_setup(self):
             """ Setup message queue """
 
-        async def shutdown(self):
+        async def on_shutdown(self):
             """ Shutdown message queue """
 
     class WebAPI(Component):
@@ -46,10 +46,10 @@ This is how it can be solved using AIOConductor.
         queue: MessageQueue  # Real instances of the components will be injected
                              # during setup routine.
 
-        async def setup(self):
+        async def on_setup(self):
             """ Setup web API """
 
-        async def shutdown(self):
+        async def on_shutdown(self):
             """ Shutdown web API """
 
     class BackgroundWorkers(Component):
@@ -57,10 +57,10 @@ This is how it can be solved using AIOConductor.
         db: Database
         queue: MessageQueue
 
-        async def setup(self):
+        async def on_setup(self):
             """ Setup background workers """
 
-        async def shutdown(self):
+        async def on_shutdown(self):
             """ Shutdown background workers """
 
     conductor = Conductor(config={})
@@ -78,10 +78,10 @@ It can be useful for testing.
 ..  code-block:: python
 
     class MessageQueueMock(Component):
-        async def setup(self):
+        async def on_setup(self):
             """ Setup message queue mock """
 
-        async def shutdown(self):
+        async def on_shutdown(self):
             """ Shutdown message queue mock """
 
     conductor = Conductor(config={})
