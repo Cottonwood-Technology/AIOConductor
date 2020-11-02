@@ -20,11 +20,11 @@ class Component:
     def __init_subclass__(cls) -> None:
         cls.__depends_on__ = {}
         for base in reversed(cls.__mro__):
-            if issubclass(base, Component):
-                try:
-                    annotations = base.__dict__["__annotations__"]
-                except KeyError:
-                    continue
+            try:
+                annotations = base.__dict__["__annotations__"]
+            except KeyError:
+                pass
+            else:
                 cls.__depends_on__.update(
                     (attr, class_)
                     for attr, class_ in annotations.items()

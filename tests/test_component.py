@@ -25,11 +25,18 @@ def test_depends_on() -> None:
         component_2: C  # type: ignore
         bar: int
 
+    class Mixin:
+        component_3: C
+
+    class Z(X, Mixin):
+        pass
+
     assert A.__depends_on__ == {}
     assert B.__depends_on__ == {}
     assert C.__depends_on__ == {}
     assert X.__depends_on__ == {"component_1": A, "component_2": B}
     assert Y.__depends_on__ == {"component_1": A, "component_2": C}
+    assert Z.__depends_on__ == {"component_1": A, "component_2": B, "component_3": C}
 
 
 def test_repr(event_loop: asyncio.AbstractEventLoop) -> None:
