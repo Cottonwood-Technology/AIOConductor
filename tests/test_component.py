@@ -53,38 +53,38 @@ async def test_setup_and_shutdown(event_loop: asyncio.AbstractEventLoop) -> None
     shutdown_log = []
 
     class A(Component):
-        async def on_setup(self):
+        async def on_setup(self) -> None:
             setup_log.append("a")
 
-        async def on_shutdown(self):
+        async def on_shutdown(self) -> None:
             shutdown_log.append("a")
 
     class B(Component):
         a: A
 
-        async def on_setup(self):
+        async def on_setup(self) -> None:
             setup_log.append("b")
 
-        async def on_shutdown(self):
+        async def on_shutdown(self) -> None:
             shutdown_log.append("b")
 
     class C(Component):
         a: A
 
-        async def on_setup(self):
+        async def on_setup(self) -> None:
             setup_log.append("c")
 
-        async def on_shutdown(self):
+        async def on_shutdown(self) -> None:
             shutdown_log.append("c")
 
     class D(Component):
         b: B
         c: C
 
-        async def on_setup(self):
+        async def on_setup(self) -> None:
             setup_log.append("d")
 
-        async def on_shutdown(self):
+        async def on_shutdown(self) -> None:
             shutdown_log.append("d")
 
     logger = logging.getLogger(__name__)
@@ -114,7 +114,12 @@ async def test_setup_and_shutdown(event_loop: asyncio.AbstractEventLoop) -> None
     assert d.depends_on == set()
     assert d.required_by == set()
 
-    await asyncio.gather(a._setup(), b._setup(a=a), c._setup(a=a), d._setup(b=b, c=c))
+    await asyncio.gather(
+        a._setup({}),
+        b._setup({"a": a}),
+        c._setup({"a": a}),
+        d._setup({"b": b, "c": c}),
+    )
     assert setup_log in (["a", "b", "c", "d"], ["a", "c", "b", "d"])
 
     assert a._active.is_set()

@@ -11,38 +11,38 @@ async def test_setup_and_shutdown(event_loop: asyncio.AbstractEventLoop) -> None
     shutdown_log = []
 
     class A(Component):
-        async def on_setup(self):
+        async def on_setup(self) -> None:
             setup_log.append("a")
 
-        async def on_shutdown(self):
+        async def on_shutdown(self) -> None:
             shutdown_log.append("a")
 
     class B(Component):
         a: A
 
-        async def on_setup(self):
+        async def on_setup(self) -> None:
             setup_log.append("b")
 
-        async def on_shutdown(self):
+        async def on_shutdown(self) -> None:
             shutdown_log.append("b")
 
     class C(Component):
         a: A
 
-        async def on_setup(self):
+        async def on_setup(self) -> None:
             setup_log.append("c")
 
-        async def on_shutdown(self):
+        async def on_shutdown(self) -> None:
             shutdown_log.append("c")
 
     class D(Component):
         b: B
         c: C
 
-        async def on_setup(self):
+        async def on_setup(self) -> None:
             setup_log.append("d")
 
-        async def on_shutdown(self):
+        async def on_shutdown(self) -> None:
             shutdown_log.append("d")
 
     conductor = Conductor(config={}, loop=event_loop)
@@ -115,13 +115,13 @@ def test_run(event_loop: asyncio.AbstractEventLoop) -> None:
     run_log = []
 
     class A(Component):
-        async def on_setup(self):
+        async def on_setup(self) -> None:
             setup_log.append("a")
 
-        async def on_shutdown(self):
+        async def on_shutdown(self) -> None:
             shutdown_log.append("a")
 
-        async def run(self):
+        async def run(self) -> None:
             run_log.append("a")
 
     conductor = Conductor(config={}, loop=event_loop)
@@ -143,11 +143,11 @@ def test_serve(event_loop: asyncio.AbstractEventLoop) -> None:
 
         counter: int
 
-        async def on_setup(self):
+        async def on_setup(self) -> None:
             setup_log.append("a")
             self.counter = 0
 
-        async def on_shutdown(self):
+        async def on_shutdown(self) -> None:
             shutdown_log.append("a")
 
         async def request(self) -> int:
@@ -160,15 +160,15 @@ def test_serve(event_loop: asyncio.AbstractEventLoop) -> None:
         a: A
         run_task: asyncio.Task
 
-        async def on_setup(self):
+        async def on_setup(self) -> None:
             setup_log.append("b")
             self.run_task = self.loop.create_task(self.run())
 
-        async def on_shutdown(self):
+        async def on_shutdown(self) -> None:
             self.run_task.cancel()
             shutdown_log.append("b")
 
-        async def run(self):
+        async def run(self) -> None:
             try:
                 while await self.a.request() < 3:
                     await asyncio.sleep(0.00001, loop=self.loop)

@@ -1,26 +1,25 @@
 import asyncio
 import logging
 import signal
-
-from typing import cast, Type, TypeVar, Any, Awaitable, List, Set, Dict
+import typing as t
 
 from .component import Component
 
 
-T = TypeVar("T", bound=Component)
+T = t.TypeVar("T", bound=Component)
 
 
 class Conductor:
-    config: Dict[str, Any]
+    config: t.Dict[str, t.Any]
     logger: logging.Logger
     loop: asyncio.AbstractEventLoop
 
-    patches: Dict[Type[Component], Type[Component]]
-    components: Dict[Type[Component], Component]
+    patches: t.Dict[t.Type[Component], t.Type[Component]]
+    components: t.Dict[t.Type[Component], Component]
 
     def __init__(
         self,
-        config: Dict[str, Any],
+        config: t.Dict[str, t.Any],
         logger: logging.Logger = None,
         loop: asyncio.AbstractEventLoop = None,
     ) -> None:
@@ -31,31 +30,34 @@ class Conductor:
         self.components = {}
 
     def patch(
-        self, component_class: Type[Component], patch_class: Type[Component]
+        self,
+        component_class: t.Type[Component],
+        patch_class: t.Type[Component],
     ) -> None:
         self.patches[component_class] = patch_class
 
-    def add(self, component_class: Type[T]) -> T:
+    def add(self, component_class: t.Type[T]) -> T:
         try:
-            return cast(T, self.components[component_class])
+            component = self.components[component_class]
         except KeyError:
-            pass
-        actual_class = self.patches.get(component_class, component_class)
-        self.components[component_class] = component = actual_class(
-            self.config, self.logger, self.loop
-        )
-        return cast(T, component)
+            actual_class = self.patches.get(component_class, component_class)
+            self.components[component_class] = component = actual_class(
+                self.config,
+                self.logger,
+                self.loop,
+            )
+        return t.cast(T, component)
 
     async def setup(self) -> None:
-        scheduled: Set[Component] = set()
-        aws: List[Awaitable] = []
+        scheduled: t.Set[Component] = set()
+        aws: t.List[t.Awaitable] = []
 
         def schedule_setup(component: T) -> T:
             if component in scheduled:
                 return component
             aws.append(
                 component._setup(
-                    **{
+                    {
                         name: schedule_setup(self.add(dependency_class))
                         for name, dependency_class in component.__depends_on__.items()
                     }
@@ -78,7 +80,7 @@ class Conductor:
         )
         self.logger.info("All components are inactive")
 
-    def run(self, aw: Awaitable) -> None:
+    def run(self, aw: t.Awaitable) -> None:
         self.loop.run_until_complete(self.setup())
         try:
             self.loop.run_until_complete(aw)

@@ -1,21 +1,20 @@
 import asyncio
 import logging
-
-from typing import ClassVar, Type, Any, Set, Dict
+import typing as t
 
 
 class Component:
-    __depends_on__: ClassVar[Dict[str, Type["Component"]]] = {}
+    __depends_on__: t.ClassVar[t.Dict[str, t.Type["Component"]]] = {}
 
-    config: Dict[str, Any]
+    config: t.Dict[str, t.Any]
     logger: logging.Logger
     loop: asyncio.AbstractEventLoop
 
     _active: asyncio.Event
     _released: asyncio.Event
 
-    required_by: Set["Component"]
-    depends_on: Set["Component"]
+    required_by: t.Set["Component"]
+    depends_on: t.Set["Component"]
 
     def __init_subclass__(cls) -> None:
         cls.__depends_on__ = {}
@@ -33,7 +32,7 @@ class Component:
 
     def __init__(
         self,
-        config: Dict[str, Any],
+        config: t.Dict[str, t.Any],
         logger: logging.Logger,
         loop: asyncio.AbstractEventLoop,
     ) -> None:
@@ -61,7 +60,7 @@ class Component:
         if not self.required_by:
             self._released.set()
 
-    async def _setup(self, **depends_on: "Component") -> None:
+    async def _setup(self, depends_on: t.Dict[str, "Component"]) -> None:
         if depends_on:
             self.logger.info("%r: Acquiring dependencies...", self)
             aws = []
