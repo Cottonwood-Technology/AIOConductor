@@ -171,7 +171,7 @@ def test_serve(event_loop: asyncio.AbstractEventLoop) -> None:
         async def run(self) -> None:
             try:
                 while await self.a.request() < 3:
-                    await asyncio.sleep(0.00001, loop=self.loop)
+                    await asyncio.sleep(0.00001)
                 self.loop.stop()
             except asyncio.CancelledError:
                 pass

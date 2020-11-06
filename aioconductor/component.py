@@ -40,8 +40,8 @@ class Component:
         self.logger = logger
         self.loop = loop
 
-        self._active = asyncio.Event(loop=loop)
-        self._released = asyncio.Event(loop=loop)
+        self._active = asyncio.Event()
+        self._released = asyncio.Event()
         self._released.set()
 
         self.required_by = set()
@@ -68,7 +68,7 @@ class Component:
                 setattr(self, name, component)
                 self.depends_on.add(component)
                 aws.append(component._acquire(self))
-            await asyncio.gather(*aws, loop=self.loop)
+            await asyncio.gather(*aws)
         self.logger.info("%r: Setting up...", self)
         await self.on_setup()
         self._active.set()
@@ -85,8 +85,7 @@ class Component:
             self.logger.exception("%r: Unexpected error during shutdown", self)
         if self.depends_on:
             await asyncio.gather(
-                *(component._release(self) for component in self.depends_on),
-                loop=self.loop,
+                *(component._release(self) for component in self.depends_on)
             )
             self.depends_on.clear()
         self._active.clear()

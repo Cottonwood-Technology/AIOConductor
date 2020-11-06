@@ -69,14 +69,13 @@ class Conductor:
         self.logger.info("Setting up components...")
         for component in tuple(self.components.values()):
             schedule_setup(component)
-        await asyncio.gather(*aws, loop=self.loop)
+        await asyncio.gather(*aws)
         self.logger.info("All components are active")
 
     async def shutdown(self) -> None:
         self.logger.info("Shutting down components...")
         await asyncio.gather(
-            *(component._shutdown() for component in self.components.values()),
-            loop=self.loop
+            *(component._shutdown() for component in self.components.values())
         )
         self.logger.info("All components are inactive")
 
