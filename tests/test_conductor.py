@@ -2,7 +2,7 @@ import asyncio
 
 import pytest  # type: ignore
 
-from aioconductor import Conductor, Component
+from aioconductor import Conductor, Component, CircularDependencyError
 
 
 @pytest.mark.asyncio
@@ -83,6 +83,38 @@ async def test_setup_and_shutdown(event_loop: asyncio.AbstractEventLoop) -> None
     assert not b._active.is_set()
     assert not c._active.is_set()
     assert not d._active.is_set()
+
+
+@pytest.mark.asyncio
+async def test_circular_dependency_error(event_loop: asyncio.AbstractEventLoop) -> None:
+    class A(Component):
+        pass
+
+    class B(Component):
+        a: A
+
+    class C(Component):
+        b: B
+
+    class D(A):
+        c: C
+
+    class E(Component):
+        c: C
+
+    conductor = Conductor(config={}, loop=event_loop)
+    conductor.patch(A, D)
+    conductor.add(E)
+
+    with pytest.raises(CircularDependencyError) as info:
+        await conductor.setup()
+    assert info.value.args == (
+        conductor.add(E),
+        conductor.add(C),
+        conductor.add(B),
+        conductor.add(A),
+        conductor.add(C),
+    )
 
 
 @pytest.mark.asyncio

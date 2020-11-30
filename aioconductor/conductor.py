@@ -4,6 +4,7 @@ import signal
 import typing as t
 
 from .component import Component
+from .exc import CircularDependencyError
 
 
 T = t.TypeVar("T", bound=Component)
@@ -52,17 +53,17 @@ class Conductor:
         scheduled: t.Set[Component] = set()
         aws: t.List[t.Awaitable] = []
 
-        def schedule_setup(component: T) -> T:
+        def schedule_setup(component: T, chain: t.Tuple[Component, ...] = ()) -> T:
             if component in scheduled:
                 return component
-            aws.append(
-                component._setup(
-                    {
-                        name: schedule_setup(self.add(dependency_class))
-                        for name, dependency_class in component.__depends_on__.items()
-                    }
-                )
-            )
+            chain += (component,)
+            depends_on = {}
+            for name, dependency_class in component.__depends_on__.items():
+                dependency = self.add(dependency_class)
+                if dependency in chain:
+                    raise CircularDependencyError(*chain, dependency)
+                depends_on[name] = schedule_setup(dependency, chain)
+            aws.append(component._setup(depends_on))
             scheduled.add(component)
             return component
 
