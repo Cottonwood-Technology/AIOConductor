@@ -26,7 +26,7 @@ setup(
         "asyncio asynchronous orchestration orchestrator conductor injector "
         "service component"
     ),
-    url="https://bitbucket.org/cottonwood-tech/aioconductor/",
+    url="https://github.com/Cottonwood-Technology/AIOConductor",
     author="Cottonwood Technology",
     author_email="info@cottonwood.tech",
     license="BSD",
