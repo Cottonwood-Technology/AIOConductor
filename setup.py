@@ -31,6 +31,7 @@ setup(
     author_email="info@cottonwood.tech",
     license="BSD",
     packages=find_packages(exclude=["tests", "tests.*"]),
+    package_data={"aioconductor": ["py.typed"]},
     zip_safe=False,
     install_requires=requirements,
 )
