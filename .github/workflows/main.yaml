@@ -1,0 +1,70 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - v*
+
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov pytest-flakes pytest-asyncio mypy
+          pip install -e .
+
+      - name: Test with PyTest
+        run: |
+          pytest
+
+      - name: Test with MyPy
+        run: |
+          mypy aioconductor
+          mypy tests
+
+  deploy:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3.6
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install wheel twine
+
+      - name: Build wheel
+        run: |
+          python setup.py bdist_wheel --python-tag py36
+
+      - name: Deploy on PyPI
+        run: |
+          twine upload \
+            --username ${{ secrets.PYPI_USERNAME }} \
+            --password ${{ secrets.PYPI_PASSWORD }} \
+            --skip-existing dist/*
