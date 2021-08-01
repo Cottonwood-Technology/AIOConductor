@@ -1,4 +1,5 @@
 import asyncio
+from logging import getLogger
 
 import pytest  # type: ignore
 
@@ -6,7 +7,7 @@ from aioconductor import Conductor, Component, CircularDependencyError
 
 
 @pytest.mark.asyncio
-async def test_setup_and_shutdown(event_loop: asyncio.AbstractEventLoop) -> None:
+async def test_setup_and_shutdown() -> None:
     setup_log = []
     shutdown_log = []
 
@@ -45,7 +46,7 @@ async def test_setup_and_shutdown(event_loop: asyncio.AbstractEventLoop) -> None
         async def on_shutdown(self) -> None:
             shutdown_log.append("d")
 
-    conductor = Conductor(config={}, loop=event_loop)
+    conductor = Conductor()
 
     d = conductor.add(D)
 
@@ -57,21 +58,25 @@ async def test_setup_and_shutdown(event_loop: asyncio.AbstractEventLoop) -> None
     c = conductor.add(C)
 
     assert a.loop is conductor.loop
-    assert a.config is conductor.config
+    assert a.config == conductor.config_policy(A)
+    assert a.logger == conductor.logging_policy(A)
     assert a._active.is_set()
 
     assert b.loop is conductor.loop
-    assert b.config is conductor.config
+    assert b.config == conductor.config_policy(B)
+    assert b.logger == conductor.logging_policy(B)
     assert b._active.is_set()
     assert b.a is a
 
     assert c.loop is conductor.loop
-    assert c.config is conductor.config
+    assert c.config == conductor.config_policy(C)
+    assert c.logger == conductor.logging_policy(C)
     assert c._active.is_set()
     assert c.a is a
 
     assert d.loop is conductor.loop
-    assert d.config is conductor.config
+    assert d.config == conductor.config_policy(D)
+    assert d.logger == conductor.logging_policy(D)
     assert d._active.is_set()
     assert d.b is b
     assert d.c is c
@@ -86,7 +91,7 @@ async def test_setup_and_shutdown(event_loop: asyncio.AbstractEventLoop) -> None
 
 
 @pytest.mark.asyncio
-async def test_circular_dependency_error(event_loop: asyncio.AbstractEventLoop) -> None:
+async def test_circular_dependency_error() -> None:
     class A(Component):
         pass
 
@@ -102,7 +107,7 @@ async def test_circular_dependency_error(event_loop: asyncio.AbstractEventLoop) 
     class E(Component):
         c: C
 
-    conductor = Conductor(config={}, loop=event_loop)
+    conductor = Conductor()
     conductor.patch(A, D)
     conductor.add(E)
 
@@ -118,7 +123,7 @@ async def test_circular_dependency_error(event_loop: asyncio.AbstractEventLoop) 
 
 
 @pytest.mark.asyncio
-async def test_patch(event_loop: asyncio.AbstractEventLoop) -> None:
+async def test_patch() -> None:
     class A(Component):
         pass
 
@@ -132,7 +137,7 @@ async def test_patch(event_loop: asyncio.AbstractEventLoop) -> None:
         a: A
         b: B
 
-    conductor = Conductor(config={}, loop=event_loop)
+    conductor = Conductor()
     conductor.patch(A, Patch)
     conductor.patch(B, Patch)
 
@@ -165,7 +170,7 @@ def test_run(event_loop: asyncio.AbstractEventLoop) -> None:
         async def run(self) -> None:
             run_log.append("a")
 
-    conductor = Conductor(config={}, loop=event_loop)
+    conductor = Conductor(loop=event_loop)
     a = conductor.add(A)
     conductor.run(a.run())
 
@@ -217,7 +222,7 @@ def test_serve(event_loop: asyncio.AbstractEventLoop) -> None:
             except asyncio.CancelledError:
                 pass
 
-    conductor = Conductor(config={}, loop=event_loop)
+    conductor = Conductor(loop=event_loop)
     b = conductor.add(B)
     conductor.serve()
 
@@ -226,3 +231,11 @@ def test_serve(event_loop: asyncio.AbstractEventLoop) -> None:
     assert shutdown_log == ["b", "a"]
     assert not b._active.is_set()
     assert b.run_task.done()
+
+
+def test_deprecation_warnings() -> None:
+    with pytest.deprecated_call():
+        Conductor(config={})
+
+    with pytest.deprecated_call():
+        Conductor(logger=getLogger("test"))

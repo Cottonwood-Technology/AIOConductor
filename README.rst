@@ -63,7 +63,7 @@ This is how it can be solved using AIOConductor.
         async def on_shutdown(self):
             """ Shutdown background workers """
 
-    conductor = Conductor(config={})
+    conductor = Conductor()
     conductor.add(WebAPI)
     conductor.add(BackgroundWorkers)
     conductor.serve()
@@ -84,7 +84,7 @@ It can be useful for testing.
         async def on_shutdown(self):
             """ Shutdown message queue mock """
 
-    conductor = Conductor(config={})
+    conductor = Conductor()
 
     conductor.patch(MessageQueue, MessageQueueMock)
     # An instance of ``MessageQueueMock`` will be injected into

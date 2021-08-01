@@ -1,9 +1,17 @@
 import asyncio
-import logging
 import signal
 import typing as t
+from warnings import warn
 
 from .component import Component
+from .config import Config, ConfigPolicy, SimpleConfigPolicy
+from .logging import (
+    Logger,
+    LoggingPolicy,
+    SimpleLoggingPolicy,
+    ModuleLoggingPolicy,
+    get_logger,
+)
 from .exc import CircularDependencyError
 
 
@@ -11,8 +19,9 @@ T = t.TypeVar("T", bound=Component)
 
 
 class Conductor:
-    config: t.Dict[str, t.Any]
-    logger: logging.Logger
+    config_policy: ConfigPolicy
+    logging_policy: LoggingPolicy
+    logger: Logger
     loop: asyncio.AbstractEventLoop
 
     patches: t.Dict[t.Type[Component], t.Type[Component]]
@@ -20,12 +29,34 @@ class Conductor:
 
     def __init__(
         self,
-        config: t.Dict[str, t.Any],
-        logger: logging.Logger = None,
+        config_policy: t.Optional[ConfigPolicy] = None,
+        logging_policy: t.Optional[LoggingPolicy] = None,
+        config: t.Optional[Config] = None,
+        logger: t.Optional[Logger] = None,
         loop: asyncio.AbstractEventLoop = None,
     ) -> None:
-        self.config = config
-        self.logger = logger or logging.getLogger("aioconductor")
+        if config is not None:
+            warn(
+                "Parameter ``config`` is deprecated, "
+                "consider to use ``config_policy`` instead",
+                DeprecationWarning,
+            )
+        if logger is not None:
+            warn(
+                "Parameter ``logger`` is deprecated, "
+                "consider to use ``logging_policy`` instead",
+                DeprecationWarning,
+            )
+        if config_policy is None:
+            config_policy = SimpleConfigPolicy(config if config is not None else {})
+        if logging_policy is None:
+            if logger is not None:
+                logging_policy = SimpleLoggingPolicy(logger)
+            else:
+                logging_policy = ModuleLoggingPolicy()
+        self.config_policy = config_policy
+        self.logging_policy = logging_policy
+        self.logger = logger or get_logger("aioconductor")
         self.loop = loop or asyncio.get_event_loop()
         self.patches = {}
         self.components = {}
@@ -43,9 +74,9 @@ class Conductor:
             component = self.components[actual_class]
         except KeyError:
             self.components[actual_class] = component = actual_class(
-                self.config,
-                self.logger,
-                self.loop,
+                config=self.config_policy(actual_class),
+                logger=self.logging_policy(actual_class),
+                loop=self.loop,
             )
         return t.cast(T, component)
 

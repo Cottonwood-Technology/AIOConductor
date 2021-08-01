@@ -2,11 +2,14 @@ import asyncio
 import logging
 import typing as t
 
+if t.TYPE_CHECKING:  # pragma: no cover
+    from .config import Config
+
 
 class Component:
     __depends_on__: t.ClassVar[t.Dict[str, t.Type["Component"]]] = {}
 
-    config: t.Dict[str, t.Any]
+    config: "Config"
     logger: logging.Logger
     loop: asyncio.AbstractEventLoop
 
@@ -32,7 +35,7 @@ class Component:
 
     def __init__(
         self,
-        config: t.Dict[str, t.Any],
+        config: "Config",
         logger: logging.Logger,
         loop: asyncio.AbstractEventLoop,
     ) -> None:
