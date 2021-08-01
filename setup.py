@@ -6,9 +6,14 @@ requirements = []
 with open("README.rst") as f:
     readme = f.read()
 
+with open("aioconductor/__init__.py") as f:
+    version = next(line for line in f if line.startswith("__version__"))
+    version = version.strip().split(" = ")[1]
+    version = version.strip('"')
+
 setup(
     name="AIOConductor",
-    version="0.1",
+    version=version,
     description="asynchronous application orchestrator",
     long_description=readme,
     classifiers=[
