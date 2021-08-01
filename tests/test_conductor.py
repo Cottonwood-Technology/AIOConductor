@@ -122,23 +122,32 @@ async def test_patch(event_loop: asyncio.AbstractEventLoop) -> None:
     class A(Component):
         pass
 
-    class APatched(Component):
+    class B(Component):
         pass
 
-    class B(Component):
+    class Patch(Component):
+        pass
+
+    class C(Component):
         a: A
+        b: B
 
     conductor = Conductor(config={}, loop=event_loop)
-    conductor.patch(A, APatched)
+    conductor.patch(A, Patch)
+    conductor.patch(B, Patch)
 
-    b = conductor.add(B)
+    c = conductor.add(C)
 
     await conductor.setup()
 
     a = conductor.add(A)
+    b = conductor.add(B)
 
-    assert isinstance(a, APatched)
-    assert b.a is a
+    assert isinstance(a, Patch)
+    assert isinstance(b, Patch)
+    assert c.a is a
+    assert c.b is b
+    assert a is b
 
 
 def test_run(event_loop: asyncio.AbstractEventLoop) -> None:

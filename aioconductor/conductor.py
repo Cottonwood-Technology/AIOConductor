@@ -38,11 +38,11 @@ class Conductor:
         self.patches[component_class] = patch_class
 
     def add(self, component_class: t.Type[T]) -> T:
+        actual_class = self.patches.get(component_class, component_class)
         try:
-            component = self.components[component_class]
+            component = self.components[actual_class]
         except KeyError:
-            actual_class = self.patches.get(component_class, component_class)
-            self.components[component_class] = component = actual_class(
+            self.components[actual_class] = component = actual_class(
                 self.config,
                 self.logger,
                 self.loop,
