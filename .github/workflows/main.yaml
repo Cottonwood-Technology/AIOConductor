@@ -1,4 +1,4 @@
-name: Test
+name: Test & Deploy
 
 on:
   push:
@@ -40,7 +40,7 @@ jobs:
           mypy tests
 
   deploy:
-    if: startsWith(github.ref, 'refs/tags/v')
+    # if: startsWith(github.ref, 'refs/tags/v')
     needs: test
     runs-on: ubuntu-latest
 
@@ -65,6 +65,6 @@ jobs:
       - name: Deploy on PyPI
         run: |
           twine upload \
-            --username ${{ secrets.PYPI_USERNAME }} \
-            --password ${{ secrets.PYPI_PASSWORD }} \
+            --username='${{ secrets.PYPI_USERNAME }}' \
+            --password='${{ secrets.PYPI_PASSWORD }}' \
             --skip-existing dist/*
